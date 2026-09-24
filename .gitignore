@@ -1,0 +1,4 @@
+build/
+*.o
+matrix_demo
+matrix_tests
