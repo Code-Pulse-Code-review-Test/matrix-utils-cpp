@@ -2,6 +2,12 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <utility>
+
+namespace {
+// pivots smaller than this count as zero
+const double kSingularTolerance = 1e-12;
+}
 
 Matrix::Matrix(std::size_t rows, std::size_t cols, double fill)
     : rows_(rows), cols_(cols), data_(rows * cols, fill) {}
@@ -120,6 +126,85 @@ double Matrix::determinant() const {
         det += sign * at(0, j) * minor(0, j).determinant();
     }
     return det;
+}
+
+double Matrix::trace() const {
+    if (rows_ != cols_) {
+        throw std::invalid_argument("trace needs a square matrix");
+    }
+    double sum = 0.0;
+    for (std::size_t i = 0; i < rows_; ++i) {
+        sum += at(i, i);
+    }
+    return sum;
+}
+
+// Gauss-Jordan elimination on [A | I] with partial pivoting
+Matrix Matrix::inverse() const {
+    if (rows_ != cols_) {
+        throw std::invalid_argument("inverse needs a square matrix");
+    }
+    const std::size_t n = rows_;
+    Matrix a(*this);
+    Matrix inv = identity(n);
+
+    for (std::size_t col = 0; col < n; ++col) {
+        std::size_t pivot = col;
+        for (std::size_t r = col + 1; r < n; ++r) {
+            if (std::fabs(a.at(r, col)) > std::fabs(a.at(pivot, col))) {
+                pivot = r;
+            }
+        }
+        if (std::fabs(a.at(pivot, col)) < kSingularTolerance) {
+            throw std::domain_error("matrix is singular");
+        }
+        a.swapRows(col, pivot);
+        inv.swapRows(col, pivot);
+
+        const double scale = a.at(col, col);
+        for (std::size_t c = 0; c < n; ++c) {
+            a.at(col, c) /= scale;
+            inv.at(col, c) /= scale;
+        }
+
+        for (std::size_t r = 0; r < n; ++r) {
+            if (r == col) {
+                continue;
+            }
+            const double factor = a.at(r, col);
+            for (std::size_t c = 0; c < n; ++c) {
+                a.at(r, c) -= factor * a.at(col, c);
+                inv.at(r, c) -= factor * inv.at(col, c);
+            }
+        }
+    }
+    return inv;
+}
+
+// goes through the inverse, fine for the small systems in the assignment
+std::vector<double> Matrix::solve(const std::vector<double>& b) const {
+    if (b.size() != rows_) {
+        throw std::invalid_argument("right-hand side has the wrong size");
+    }
+    Matrix column(rows_, 1);
+    for (std::size_t i = 0; i < rows_; ++i) {
+        column.at(i, 0) = b[i];
+    }
+    const Matrix x = inverse() * column;
+    std::vector<double> result(rows_);
+    for (std::size_t i = 0; i < rows_; ++i) {
+        result[i] = x.at(i, 0);
+    }
+    return result;
+}
+
+void Matrix::swapRows(std::size_t a, std::size_t b) {
+    if (a == b) {
+        return;
+    }
+    for (std::size_t c = 0; c < cols_; ++c) {
+        std::swap(at(a, c), at(b, c));
+    }
 }
 
 std::ostream& operator<<(std::ostream& out, const Matrix& m) {
