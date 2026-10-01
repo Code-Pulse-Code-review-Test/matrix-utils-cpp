@@ -17,6 +17,7 @@ public:
     double at(std::size_t r, std::size_t c) const;
 
     Matrix operator+(const Matrix& other) const;
+    Matrix operator-(const Matrix& other) const;
     Matrix operator*(const Matrix& other) const;
     Matrix operator*(double scalar) const;
     bool operator==(const Matrix& other) const;
@@ -24,6 +25,7 @@ public:
     Matrix transpose() const;
     double determinant() const;
     double trace() const;
+    Matrix power(unsigned int n) const;
 
     // throws std::domain_error when the matrix is singular
     Matrix inverse() const;
