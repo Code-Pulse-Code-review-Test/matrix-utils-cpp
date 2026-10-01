@@ -23,6 +23,12 @@ public:
 
     Matrix transpose() const;
     double determinant() const;
+    double trace() const;
+
+    // throws std::domain_error when the matrix is singular
+    Matrix inverse() const;
+    // x such that (*this) * x == b
+    std::vector<double> solve(const std::vector<double>& b) const;
 
 private:
     std::size_t rows_;
@@ -30,6 +36,7 @@ private:
     std::vector<double> data_;
 
     Matrix minor(std::size_t skipRow, std::size_t skipCol) const;
+    void swapRows(std::size_t a, std::size_t b);
 };
 
 std::ostream& operator<<(std::ostream& out, const Matrix& m);

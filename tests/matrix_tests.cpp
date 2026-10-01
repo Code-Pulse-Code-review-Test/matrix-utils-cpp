@@ -1,6 +1,8 @@
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include "matrix.h"
 
@@ -34,11 +36,66 @@ static void testBadSizes() {
     assert(thrown);
 }
 
+static bool approxEqual(double a, double b) {
+    return std::fabs(a - b) < 1e-9;
+}
+
+static void testTrace() {
+    assert(Matrix::identity(3).trace() == 3);
+}
+
+static void testInverse() {
+    Matrix m(2, 2);
+    m.at(0, 0) = 4;
+    m.at(0, 1) = 7;
+    m.at(1, 0) = 2;
+    m.at(1, 1) = 6;
+    assert(m * m.inverse() == Matrix::identity(2));
+    assert(approxEqual(m.inverse().at(0, 0), 0.6));
+}
+
+static void testInverseNeedsRowSwap() {
+    // zero in the top left corner
+    Matrix m(3, 3);
+    m.at(0, 1) = 1;
+    m.at(1, 0) = 1;
+    m.at(2, 2) = 2;
+    assert(m * m.inverse() == Matrix::identity(3));
+}
+
+static void testSingular() {
+    Matrix m(2, 2, 1.0);
+    bool thrown = false;
+    try {
+        (void)m.inverse();
+    } catch (const std::domain_error&) {
+        thrown = true;
+    }
+    assert(thrown);
+}
+
+static void testSolve() {
+    // 2x + y = 5, x + 3y = 10
+    Matrix m(2, 2);
+    m.at(0, 0) = 2;
+    m.at(0, 1) = 1;
+    m.at(1, 0) = 1;
+    m.at(1, 1) = 3;
+    const std::vector<double> x = m.solve({5, 10});
+    assert(approxEqual(x[0], 1));
+    assert(approxEqual(x[1], 3));
+}
+
 int main() {
     testIdentity();
     testTranspose();
     testDeterminant();
     testBadSizes();
+    testTrace();
+    testInverse();
+    testInverseNeedsRowSwap();
+    testSingular();
+    testSolve();
     std::cout << "all tests passed\n";
     return 0;
 }
