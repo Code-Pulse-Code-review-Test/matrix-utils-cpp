@@ -45,6 +45,10 @@ Matrix Matrix::operator+(const Matrix& other) const {
     return result;
 }
 
+Matrix Matrix::operator-(const Matrix& other) const {
+    return *this + other * -1.0;
+}
+
 Matrix Matrix::operator*(const Matrix& other) const {
     if (cols_ != other.rows_) {
         throw std::invalid_argument("cannot multiply these matrices");
@@ -88,6 +92,23 @@ Matrix Matrix::transpose() const {
         for (std::size_t j = 0; j < cols_; ++j) {
             result.at(j, i) = at(i, j);
         }
+    }
+    return result;
+}
+
+// square and multiply, so A^n takes about log2(n) products
+Matrix Matrix::power(unsigned int n) const {
+    if (rows_ != cols_) {
+        throw std::invalid_argument("power needs a square matrix");
+    }
+    Matrix result = identity(rows_);
+    Matrix base(*this);
+    while (n > 0) {
+        if (n % 2 == 1) {
+            result = result * base;
+        }
+        base = base * base;
+        n /= 2;
     }
     return result;
 }

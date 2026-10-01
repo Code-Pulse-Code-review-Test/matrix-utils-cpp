@@ -86,6 +86,22 @@ static void testSolve() {
     assert(approxEqual(x[1], 3));
 }
 
+static void testSubtract() {
+    Matrix a(2, 2, 5.0);
+    Matrix b(2, 2, 2.0);
+    assert((a - b) == Matrix(2, 2, 3.0));
+    assert((a - a) == Matrix(2, 2));
+}
+
+static void testPower() {
+    // fibonacci matrix, [[1,1],[1,0]]^10 has F(11) in the corner
+    Matrix f(2, 2, 1.0);
+    f.at(1, 1) = 0;
+    assert(f.power(10).at(0, 0) == 89);
+    assert(f.power(0) == Matrix::identity(2));
+    assert(f.power(3) == f * f * f);
+}
+
 int main() {
     testIdentity();
     testTranspose();
@@ -96,6 +112,8 @@ int main() {
     testInverseNeedsRowSwap();
     testSingular();
     testSolve();
+    testSubtract();
+    testPower();
     std::cout << "all tests passed\n";
     return 0;
 }
